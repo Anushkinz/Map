@@ -7,6 +7,7 @@
 
 import UIKit
 import MapKit
+import CoreLocation
 
 class ViewController: UIViewController {
     
@@ -14,14 +15,16 @@ class ViewController: UIViewController {
     let asidMallLocation: Loc = Loc(location: "пр. Чингиза Айтматова 3, Азия Молл Бишкек 750065", name: "Asia Mall")
     let solidLocation: Loc = Loc(location: "Ahunbaeva 119a", name: "Solid academy")
     let neobisLocation: Loc = Loc(location: "98 улица Тыныстанова, Бишкек", name: "Neobis")
-
+    let locationManager = CLLocationManager()
+    
+    
     @IBOutlet weak var MapVC: MKMapView!
     
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
-        
+        checkLocationServices()
     }
 
     private func setupPlacemark(loc: Loc) {
@@ -52,6 +55,38 @@ class ViewController: UIViewController {
             self.MapVC.selectAnnotation(annotation, animated: true)
         }
     }
+    private func checkLocationServices() {
+        
+        if CLLocationManager.locationServicesEnabled() {
+            setupLocationManager()
+            checkLocationAuthorization()
+        } else {
+            // Show alert controller
+        }
+    }
+    private func setupLocationManager(){
+        locationManager.delegate = self
+        locationManager.desiredAccuracy = kCLLocationAccuracyBest
+    }
+    
+    private func checkLocationAuthorization() {
+        switch CLLocationManager.authorizationStatus() {
+        case .authorizedWhenInUse:
+            MapVC.showsUserLocation = true
+            break
+        case .denied:
+            // Show alert controller
+            break
+        case .notDetermined:
+            locationManager.requestWhenInUseAuthorization()
+        case .restricted:
+            break
+        case .authorizedAlways:
+            break
+        @unknown default:
+            print("New case is available")
+        }
+    }
 
     @IBAction func neobis(_ sender: UIButton) {
         setupPlacemark(loc: neobisLocation)
@@ -64,3 +99,10 @@ class ViewController: UIViewController {
     }
 }
 
+
+extension ViewController: CLLocationManagerDelegate {
+    
+    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        checkLocationAuthorization()
+    }
+}
